@@ -40,7 +40,7 @@ wpi::json GetConfigJson();
  *                             controller objects
  */
 void AddMotorController(
-    int port, std::string_view controller, bool inverted,
+    int port, std::string_view controller, bool inverted, std::string canbus,
     std::vector<std::unique_ptr<frc::MotorController>>* controllers);
 
 /**
@@ -89,7 +89,7 @@ void SetMotorControllers(
 void SetupEncoders(
     std::string_view encoderType, bool isEncoding, int period, double cpr,
     double gearing, int numSamples, std::string_view controllerName,
-    frc::MotorController* controller, bool encoderInverted,
+    frc::MotorController* controller, bool encoderInverted, std::string canbus,
     const std::vector<int>& encoderPorts, std::unique_ptr<CANCoder>& cancoder,
     std::unique_ptr<rev::SparkMaxRelativeEncoder>& revEncoderPort,
     std::unique_ptr<rev::SparkMaxAlternateEncoder>& revDataPort,

@@ -130,7 +130,7 @@ void Logger::Display() {
   };
 
   CreateVoltageParameters("Quasistatic Ramp Rate (V/s)",
-                          &m_settings.quasistaticRampRate, 0.10f, 0.60f);
+                          &m_settings.quasistaticRampRate, 0.05f, 0.60f);
   sysid::CreateTooltip(
       "This is the rate at which the voltage will increase during the "
       "quasistatic test.");

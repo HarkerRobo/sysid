@@ -134,6 +134,8 @@ void Generator::CANCoderSetup(bool drive) {
   ImGui::SameLine();
   ImGui::Checkbox(drive ? "Left Encoder Inverted" : "Encoder Inverted",
                   &m_settings.primaryEncoderInverted);
+  ImGui::SetNextItemWidth(ImGui::GetFontSize() * kTextBoxWidthMultiple);
+  ImGui::InputText(drive ? "L CANCoder CAN Bus" : "CANCoder CAN Bus", &m_settings.primaryEncoderCANBus);
   if (drive) {
     ImGui::SetNextItemWidth(ImGui::GetFontSize() * 2);
     ImGui::InputInt("R CANCoder Port", &m_settings.secondaryEncoderPorts[1], 0,
@@ -141,6 +143,8 @@ void Generator::CANCoderSetup(bool drive) {
     ImGui::SameLine();
     ImGui::Checkbox("Right Encoder Inverted",
                     &m_settings.secondaryEncoderInverted);
+    ImGui::SetNextItemWidth(ImGui::GetFontSize() * kTextBoxWidthMultiple);
+    ImGui::InputText("R CANCoder CAN Bus", &m_settings.secondaryEncoderCANBus);
   }
 }
 
@@ -292,6 +296,8 @@ void Generator::Display() {
     auto& mc = m_settings.motorControllers;
     auto& pi = m_settings.primaryMotorsInverted;
     auto& si = m_settings.secondaryMotorsInverted;
+    auto& pc = m_settings.primaryMotorsCANBus;
+    auto& sc = m_settings.secondaryMotorsCANBus;
 
     // Ensure that our vector contains i+1 elements.
     if (pm.size() == i) {
@@ -300,6 +306,8 @@ void Generator::Display() {
       mc.emplace_back(motorControllerNames[0]);
       pi.emplace_back(false);
       si.emplace_back(false);
+      pc.emplace_back("rio");
+      sc.emplace_back("rio");
     }
 
     // Make sure elements have unique IDs.
@@ -332,8 +340,12 @@ void Generator::Display() {
     // Add primary (left for drivetrain) motor ports.
     ImGui::SetNextItemWidth(ImGui::GetFontSize() * 2);
     std::string primaryName;
+    std::string primaryCANBus;
     if (drive) {
       primaryName += "L ";
+    }
+    if (m_settings.motorControllers[i] == sysid::motorcontroller::kTalonFX) {
+      primaryCANBus = primaryName + "Motor CAN Bus";
     }
     if (m_settings.motorControllers[i] == sysid::motorcontroller::kPWM) {
       primaryName += "Motor Port";
@@ -345,6 +357,10 @@ void Generator::Display() {
     // Add inverted setting.
     ImGui::SameLine();
     ImGui::Checkbox(drive ? "L Inverted" : "Inverted", &pi[i]);
+    if (m_settings.motorControllers[i] == sysid::motorcontroller::kTalonFX) {
+      ImGui::SetNextItemWidth(ImGui::GetFontSize() * kTextBoxWidthMultiple);
+      ImGui::InputText(primaryCANBus.c_str(), &pc[i]);
+    }
 
     // Add right side drivetrain ports (if the analysis type is drivetrain).
     if (drive) {
@@ -360,6 +376,10 @@ void Generator::Display() {
       // Add inverted setting.
       ImGui::SameLine();
       ImGui::Checkbox("R Inverted", &si[i]);
+      if (m_settings.motorControllers[i] == sysid::motorcontroller::kTalonFX) {
+        ImGui::SetNextItemWidth(ImGui::GetFontSize() * kTextBoxWidthMultiple);
+        ImGui::InputText("R Motor CAN Bus", &sc[i]);
+      }
     }
 
     ImGui::PopID();
@@ -491,7 +511,9 @@ void Generator::Display() {
       }
     } else if (gyroType == sysid::gyro::kPigeon2) {
       ImGui::InputInt("CAN ID", &m_gyroPort, 0, 0);
-      m_settings.gyroCtor = std::to_string(m_gyroPort);
+      ImGui::SetNextItemWidth(ImGui::GetFontSize() * kTextBoxWidthMultiple);
+      ImGui::InputText("CAN Bus", &m_gyroCANBus);
+      m_settings.gyroCtor = m_gyroPort + "-" + std::to_string(m_gyroPort);
     } else if (gyroType == sysid::gyro::kADXRS450) {
       ImGui::Combo("SPI Port", &m_gyroParam, kADXRS450Ctors,
                    IM_ARRAYSIZE(kADXRS450Ctors));

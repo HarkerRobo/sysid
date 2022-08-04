@@ -28,9 +28,12 @@ Robot::Robot() : frc::TimedRobot(5_ms) {
         m_json.at("primary encoder ports").get<std::vector<int>>();
     std::vector<bool> motorsInverted =
         m_json.at("primary motors inverted").get<std::vector<bool>>();
+    std::vector<std::string> motorCANBuses = 
+        m_json.at("primary motors CAN bus").get<std::vector<std::string>>();
 
     std::string encoderType = m_json.at("encoder type").get<std::string>();
     bool encoderInverted = m_json.at("primary encoder inverted").get<bool>();
+    std::string encoderCANBus = m_json.at("primary encoder CAN bus").get<std::string>();
 
     double cpr = m_json.at("counts per rotation").get<double>();
     double gearingNumerator = m_json.at("gearing numerator").get<double>();
@@ -46,13 +49,13 @@ Robot::Robot() : frc::TimedRobot(5_ms) {
     fmt::print("Initializing Motors\n");
     for (size_t i = 0; i < ports.size(); i++) {
       sysid::AddMotorController(ports[i], m_controllerNames[i],
-                                motorsInverted[i], &m_controllers);
+                                motorsInverted[i], motorCANBuses[i], &m_controllers);
     }
 
     fmt::print("Initializing encoder\n");
     sysid::SetupEncoders(encoderType, isEncoding, period, cpr, gearing,
                          numSamples, m_controllerNames[0],
-                         m_controllers.front().get(), encoderInverted,
+                         m_controllers.front().get(), encoderInverted, encoderCANBus,
                          encoderPorts, m_cancoder, m_revEncoderPort,
                          m_revDataPort, m_encoder, m_position, m_rate);
   } catch (std::exception& e) {
@@ -60,6 +63,7 @@ Robot::Robot() : frc::TimedRobot(5_ms) {
     std::exit(-1);
   }
   std::fflush(stdout);
+  smartDashboardUpdate = 1;
 #ifdef INTEGRATION
   frc::SmartDashboard::PutBoolean("SysIdRun", false);
   // TODO use std::exit or EndCompetition once CTRE bug is fixed
@@ -93,6 +97,11 @@ void Robot::AutonomousPeriodic() {
   m_logger.Log(m_logger.MeasureVoltage(m_controllers, m_controllerNames),
                m_position(), m_rate());
   sysid::SetMotorControllers(m_logger.GetMotorVoltage(), m_controllers);
+  smartDashboardUpdate++;
+  if (smartDashboardUpdate % 100 == 0) {
+    smartDashboardUpdate = 1;
+    PushNTDiagnostics();
+  }
 }
 
 void Robot::TeleopInit() {}

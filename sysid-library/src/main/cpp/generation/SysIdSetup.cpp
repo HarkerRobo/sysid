@@ -56,7 +56,7 @@ wpi::json GetConfigJson() {
 }
 
 void AddMotorController(
-    int port, std::string_view controller, bool inverted,
+    int port, std::string_view controller, bool inverted, std::string canbus,
     std::vector<std::unique_ptr<frc::MotorController>>* controllers) {
   if (controller == "TalonSRX" || controller == "VictorSPX" ||
       controller == "TalonFX") {
@@ -65,7 +65,7 @@ void AddMotorController(
       controllers->push_back(std::make_unique<WPI_TalonSRX>(port));
     } else if (controller == "TalonFX") {
       fmt::print("Setup TalonFX\n");
-      controllers->emplace_back(std::make_unique<WPI_TalonFX>(port));
+      controllers->emplace_back(std::make_unique<WPI_TalonFX>(port, canbus));
     } else {
       fmt::print("Setup VictorSPX\n");
       controllers->emplace_back(std::make_unique<WPI_VictorSPX>(port));
@@ -75,7 +75,7 @@ void AddMotorController(
         dynamic_cast<WPI_BaseMotorController*>(controllers->back().get());
     ctreController->ConfigFactoryDefault();
     ctreController->SetInverted(inverted);
-    ctreController->SetNeutralMode(motorcontrol::NeutralMode::Brake);
+    ctreController->SetNeutralMode(motorcontrol::NeutralMode::Coast);
   } else if (controller == "SPARK MAX (Brushless)" ||
              controller == "SPARK MAX (Brushed)") {
     if (controller == "SPARK MAX (Brushless)") {
@@ -158,7 +158,7 @@ void SetDefaultDataCollection(std::function<double()>& position,
 void SetupEncoders(
     std::string_view encoderType, bool isEncoding, int period, double cpr,
     double gearing, int numSamples, std::string_view controllerName,
-    frc::MotorController* controller, bool encoderInverted,
+    frc::MotorController* controller, bool encoderInverted, std::string canbus,
     const std::vector<int>& encoderPorts, std::unique_ptr<CANCoder>& cancoder,
     std::unique_ptr<rev::SparkMaxRelativeEncoder>& revEncoderPort,
     std::unique_ptr<rev::SparkMaxAlternateEncoder>& revDataPort,
@@ -235,7 +235,7 @@ void SetupEncoders(
                      combinedCPR, numSamples, encoderInverted, position, rate);
   } else if (encoderType == "CANCoder") {
     fmt::print("Setup CANCoder\n");
-    cancoder = std::make_unique<CANCoder>(encoderPorts[0]);
+    cancoder = std::make_unique<CANCoder>(encoderPorts[0], canbus);
     cancoder->ConfigSensorDirection(encoderInverted);
 
     sensors::SensorVelocityMeasPeriod cancoderPeriod =
@@ -304,10 +304,14 @@ void SetupGyro(
 #endif
   if (wpi::starts_with(gyroType, "Pigeon")) {
     std::string portStr;
-    if (wpi::contains(gyroCtor, "WPI_TalonSRX")) {
-      portStr = wpi::split(gyroCtor, "-").second;
-    } else {
+    std::string canStr;
+    if (gyroType == "Pigeon") {
       portStr = gyroCtor;
+    } else {
+      portStr = wpi::split(gyroCtor, "-").second;
+      if(!wpi::contains(gyroCtor, "WPI_TalonSRX")){
+        canStr = wpi::split(gyroCtor, "-").first;
+      }
     }
 
     // converts gyroCtor into port #
@@ -340,13 +344,13 @@ void SetupGyro(
       pigeon = std::make_unique<PigeonIMU>(talon);
       fmt::print("Setup Pigeon, {}\n", portStr);
     } else {
-      portStr = fmt::format("{} (CAN)", portStr);
-
       if (gyroType == "Pigeon") {
+        portStr = fmt::format("{} (CAN)", portStr);
         pigeon = std::make_unique<PigeonIMU>(srxPort);
         fmt::print("Setup Pigeon, {}\n", portStr);
       } else {
-        pigeon = std::make_unique<Pigeon2>(srxPort);
+        portStr = fmt::format("{} (CAN on CAN Bus \"{}\")", portStr, canStr);
+        pigeon = std::make_unique<Pigeon2>(srxPort, canStr);
         fmt::print("Setup Pigeon2, {}\n", portStr);
       }
     }

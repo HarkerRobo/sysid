@@ -130,6 +130,11 @@ struct ConfigSettings {
    * If the configuration is for a drivetrain.
    */
   bool isDrive = false;
+
+  wpi::SmallVector<std::string, 3> primaryMotorsCANBus = {"rio", "rio"};
+  wpi::SmallVector<std::string, 3> secondaryMotorsCANBus = {"rio", "rio"};
+  std::string primaryEncoderCANBus = "rio";
+  std::string secondaryEncoderCANBus = "rio";
 };
 
 // Pre-built configuration for the Romi -- all Romis have the same setup.

@@ -34,6 +34,8 @@ Robot::Robot() : frc::TimedRobot(5_ms) {
         m_json.at("primary encoder ports").get<std::vector<int>>();
     std::vector<bool> leftMotorsInverted =
         m_json.at("primary motors inverted").get<std::vector<bool>>();
+    std::vector<std::string> leftMotorsCANBuses = 
+        m_json.at("primary motors CAN bus").get<std::vector<std::string>>();
 
     std::vector<int> rightPorts =
         m_json.at("secondary motor ports").get<std::vector<int>>();
@@ -41,12 +43,16 @@ Robot::Robot() : frc::TimedRobot(5_ms) {
         m_json.at("secondary encoder ports").get<std::vector<int>>();
     std::vector<bool> rightMotorsInverted =
         m_json.at("secondary motors inverted").get<std::vector<bool>>();
+    std::vector<std::string> rightMotorsCANBuses = 
+        m_json.at("secondary motors CAN bus").get<std::vector<std::string>>();
 
     std::string encoderType = m_json.at("encoder type").get<std::string>();
     bool leftEncoderInverted =
         m_json.at("primary encoder inverted").get<bool>();
+    std::string leftEncoderCANBus = m_json.at("primary encoder CAN bus").get<std::string>();
     bool rightEncoderInverted =
         m_json.at("secondary encoder inverted").get<bool>();
+    std::string rightEncoderCANBus = m_json.at("secondary encoder CAN bus").get<std::string>();
     double cpr = m_json.at("counts per rotation").get<double>();
     double gearingNumerator = m_json.at("gearing numerator").get<double>();
     double gearingDenominator = m_json.at("gearing denominator").get<double>();
@@ -64,21 +70,21 @@ Robot::Robot() : frc::TimedRobot(5_ms) {
     fmt::print("Setup motors\n");
     for (size_t i = 0; i < leftPorts.size(); i++) {
       sysid::AddMotorController(leftPorts[i], m_controllerNames[i],
-                                leftMotorsInverted[i], &m_leftControllers);
+                                leftMotorsInverted[i], leftMotorsCANBuses[i], &m_leftControllers);
       sysid::AddMotorController(rightPorts[i], m_controllerNames[i],
-                                rightMotorsInverted[i], &m_rightControllers);
+                                rightMotorsInverted[i], rightMotorsCANBuses[i], &m_rightControllers);
     }
 
     fmt::print("Setup encoders\n");
     sysid::SetupEncoders(encoderType, isEncoding, period, cpr, gearing,
                          numSamples, m_controllerNames[0],
-                         m_leftControllers.at(0).get(), leftEncoderInverted,
+                         m_leftControllers.at(0).get(), leftEncoderInverted, leftEncoderCANBus,
                          leftEncoderPorts, m_leftCancoder, m_leftRevEncoderPort,
                          m_leftRevDataPort, m_leftEncoder, m_leftPosition,
                          m_leftRate);
     sysid::SetupEncoders(encoderType, isEncoding, period, cpr, gearing,
                          numSamples, m_controllerNames[0],
-                         m_rightControllers.at(0).get(), rightEncoderInverted,
+                         m_rightControllers.at(0).get(), rightEncoderInverted, rightEncoderCANBus,
                          rightEncoderPorts, m_rightCancoder,
                          m_rightRevEncoderPort, m_rightRevDataPort,
                          m_rightEncoder, m_rightPosition, m_rightRate);
@@ -94,7 +100,7 @@ Robot::Robot() : frc::TimedRobot(5_ms) {
   }
   m_logger.UpdateThreadPriority();
   std::fflush(stdout);
-
+  smartDashboardUpdate = 1;
 #ifdef INTEGRATION
   frc::SmartDashboard::PutBoolean("SysIdRun", false);
   // TODO use std::exit or EndCompetition once CTRE bug is fixed
@@ -133,6 +139,11 @@ void Robot::AutonomousPeriodic() {
   sysid::SetMotorControllers(m_logger.GetLeftMotorVoltage(), m_leftControllers);
   sysid::SetMotorControllers(m_logger.GetRightMotorVoltage(),
                              m_rightControllers);
+  smartDashboardUpdate++;
+  if (smartDashboardUpdate % 100 == 0) {
+    PushNTDiagnostics();
+    smartDashboardUpdate = 1;
+  }
 }
 
 void Robot::TeleopInit() {}

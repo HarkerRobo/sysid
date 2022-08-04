@@ -67,4 +67,5 @@ class Robot : public frc::TimedRobot {
   std::unique_ptr<BasePigeon> m_pigeon;
 
   sysid::SysIdDrivetrainLogger m_logger;
+  short smartDashboardUpdate;
 };

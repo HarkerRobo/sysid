@@ -61,7 +61,7 @@ class SysIdLogger {
    * seconds of test data * 200 samples/second * 9 doubles/sample(320kB of
    * reserved data).
    */
-  static constexpr size_t kDataVectorSize = 36000;
+  static constexpr size_t kDataVectorSize = 1080000;
 
   /**
    * The commanded motor voltage. Either as a rate (V/s) for the quasistatic

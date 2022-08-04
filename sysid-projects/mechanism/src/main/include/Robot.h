@@ -49,4 +49,5 @@ class Robot : public frc::TimedRobot {
   std::unique_ptr<CANCoder> m_cancoder;
   std::unique_ptr<frc::Encoder> m_encoder;
   sysid::SysIdGeneralMechanismLogger m_logger;
+  short smartDashboardUpdate;
 };

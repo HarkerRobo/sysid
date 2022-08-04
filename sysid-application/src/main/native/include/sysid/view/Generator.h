@@ -192,6 +192,7 @@ class Generator : public glass::View {
 
   // CTRE Pigeon-specific parameters.
   int m_gyroPort = 1;
+  std::string m_gyroCANBus = "rio";
   int m_gyroParam = 0;
   bool m_isTalon = false;
 

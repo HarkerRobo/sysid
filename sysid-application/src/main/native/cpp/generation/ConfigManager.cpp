@@ -44,6 +44,11 @@ wpi::json ConfigManager::Generate(size_t occupied) {
   json["secondary motors inverted"] =
       SliceVector(m_config.secondaryMotorsInverted, occupied);
 
+  json["primary motors CAN bus"] =
+      SliceVector(m_config.primaryMotorsCANBus, occupied);
+  json["secondary motors CAN bus"] =
+      SliceVector(m_config.secondaryMotorsCANBus, occupied);
+
   // Add encoder ports.
   json["primary encoder ports"] = m_config.primaryEncoderPorts;
   json["secondary encoder ports"] = m_config.secondaryEncoderPorts;
@@ -54,6 +59,9 @@ wpi::json ConfigManager::Generate(size_t occupied) {
   // Add encoder inversions.
   json["primary encoder inverted"] = m_config.primaryEncoderInverted;
   json["secondary encoder inverted"] = m_config.secondaryEncoderInverted;
+
+  json["primary encoder CAN bus"] = m_config.primaryEncoderCANBus;
+  json["secondary encoder CAN bus"] = m_config.secondaryEncoderCANBus;
 
   // Add encoder units -> real world units conversion constant.
   json["counts per rotation"] = m_config.cpr;
@@ -81,8 +89,12 @@ void ConfigManager::ReadJSON(std::string_view path) {
                                        "motor controllers",
                                        "primary motors inverted",
                                        "secondary motors inverted",
+                                       "primary motors CAN bus",
+                                       "secondary motors CAN bus",
                                        "primary encoder ports",
                                        "secondary encoder ports",
+                                       "primary encoder CAN bus",
+                                       "secondary encoder CAN bus",
                                        "encoder type",
                                        "primary encoder inverted",
                                        "secondary encoder inverted",
@@ -133,6 +145,11 @@ void ConfigManager::ReadJSON(std::string_view path) {
       json_file.at("primary motors inverted").get<wpi::SmallVector<bool, 3>>();
   m_config.secondaryMotorsInverted = json_file.at("secondary motors inverted")
                                          .get<wpi::SmallVector<bool, 3>>();
+  
+  m_config.primaryMotorsCANBus =
+      json_file.at("primary motors CAN bus").get<wpi::SmallVector<std::string, 3>>();
+  m_config.secondaryMotorsCANBus = json_file.at("secondary motors CAN bus")
+                                         .get<wpi::SmallVector<std::string, 3>>();
 
   m_config.encoderType = sysid::encoder::FromEncoderName(
       json_file.at("encoder type").get<std::string>());
@@ -145,6 +162,11 @@ void ConfigManager::ReadJSON(std::string_view path) {
       json_file.at("primary encoder inverted").get<bool>();
   m_config.secondaryEncoderInverted =
       json_file.at("secondary encoder inverted").get<bool>();
+
+  m_config.primaryEncoderCANBus =
+      json_file.at("primary encoder CAN bus").get<std::string>();
+  m_config.secondaryEncoderCANBus =
+      json_file.at("secondary encoder CAN bus").get<std::string>();
 
   m_config.cpr = json_file.at("counts per rotation").get<double>();
   m_config.gearingNumerator = json_file.at("gearing numerator").get<double>();
