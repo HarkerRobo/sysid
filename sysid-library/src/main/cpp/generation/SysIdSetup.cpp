@@ -75,7 +75,7 @@ void AddMotorController(
         dynamic_cast<WPI_BaseMotorController*>(controllers->back().get());
     ctreController->ConfigFactoryDefault();
     ctreController->SetInverted(inverted);
-    ctreController->SetNeutralMode(motorcontrol::NeutralMode::Coast);
+    ctreController->SetNeutralMode(motorcontrol::NeutralMode::Brake);
   } else if (controller == "SPARK MAX (Brushless)" ||
              controller == "SPARK MAX (Brushed)") {
     if (controller == "SPARK MAX (Brushless)") {
